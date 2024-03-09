@@ -1,4 +1,5 @@
 ﻿using Mapster;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PoshtoBack.Data;
 using PoshtoBack.Data.Models;
@@ -13,6 +14,7 @@ public class UserController(PoshtoDbContext context) : Controller
 
     [HttpGet]
     [Route("List")]
+    [Authorize]
     public async Task<IActionResult> GetAllUsers()
     {
         var users = _unitOfWork.Users.GetAll().ToList().Adapt<List<UserDto>>();

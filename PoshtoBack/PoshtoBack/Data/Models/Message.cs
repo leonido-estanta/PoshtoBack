@@ -22,7 +22,6 @@ public class MessageDto
     public int SenderId { get; set; }
     public string Text { get; set; }
     public DateTime Timestamp { get; set; }
-    public bool IsFromMe { get; set; }
 }
 
 public class AddMessageDto

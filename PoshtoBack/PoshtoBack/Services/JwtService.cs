@@ -2,7 +2,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using PoshtoBack.Data;
 using PoshtoBack.Data.Models;
 
 namespace PoshtoBack.Services;

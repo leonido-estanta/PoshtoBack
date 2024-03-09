@@ -2,9 +2,4 @@
 
 namespace PoshtoBack.Data;
 
-public class MessageRepository : Repository<Message>, IMessageRepository
-{
-    public MessageRepository(PoshtoDbContext context) : base(context)
-    {
-    }
-}
+public class MessageRepository(PoshtoDbContext context) : Repository<Message>(context), IMessageRepository;

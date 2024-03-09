@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PoshtoBack.Data;
 using PoshtoBack.Services;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using PoshtoBack.Data.Models;
 
 namespace PoshtoBack.Controllers;
@@ -11,7 +9,6 @@ namespace PoshtoBack.Controllers;
 [Route("[controller]")]
 public class AuthController(PoshtoDbContext context) : Controller
 {
-    private readonly SeedService _seedService = new();
     private readonly IUnitOfWork _unitOfWork = new UnitOfWork(context);
     private readonly IJwtService _jwtService = new JwtService();
 
@@ -19,7 +16,7 @@ public class AuthController(PoshtoDbContext context) : Controller
     [Route("Login")]
     public async Task<IActionResult> Login(string seedPhrase)
     {
-        var encodedSeed = _seedService.EncodeSeed(seedPhrase);
+        var encodedSeed = SeedService.EncodeSeed(seedPhrase);
         var user = _unitOfWork.Users.Find(w => w.PasswordHash == encodedSeed).FirstOrDefault();
         if (user == null) return NotFound();
         
@@ -31,23 +28,20 @@ public class AuthController(PoshtoDbContext context) : Controller
     [Route("Register")]
     public async Task<IActionResult> Register(string seedPhrase)
     {
-        var encodedSeed = _seedService.EncodeSeed(seedPhrase);
-        _unitOfWork.Users.Add(new User
+        var encodedSeed = SeedService.EncodeSeed(seedPhrase);
+
+        var newUser = new User
         {
-            PasswordHash = encodedSeed
-        });
-        
+            PasswordHash = encodedSeed,
+            AvatarUrl = "https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg"
+        };
+
+        _unitOfWork.Users.Add(newUser);
         _unitOfWork.Save();
-        
+
+        newUser.Name = $"user{newUser.Id}";
+        _unitOfWork.Save();
+
         return Ok();
-    }
-    
-    [HttpGet]
-    [Route("Protected")]
-    [Authorize]
-    public IActionResult Protected()
-    {
-        var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-        return Ok($"Access to protected resource, User ID: {userId}");
     }
 }

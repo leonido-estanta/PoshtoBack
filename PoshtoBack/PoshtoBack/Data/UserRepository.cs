@@ -2,9 +2,6 @@
 
 namespace PoshtoBack.Data;
 
-public class UserRepository : Repository<User>, IUserRepository
+public class UserRepository(PoshtoDbContext context) : Repository<User>(context), IUserRepository
 {
-    public UserRepository(PoshtoDbContext context) : base(context)
-    {
-    }
 }

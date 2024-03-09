@@ -4,9 +4,9 @@ namespace PoshtoBack.Data;
 
 public class Repository<T> : IRepository<T> where T : class
 {
-    protected readonly PoshtoDbContext Context;
+    private readonly PoshtoDbContext Context;
 
-    public Repository(PoshtoDbContext context)
+    protected Repository(PoshtoDbContext context)
     {
         Context = context;
     }
@@ -21,7 +21,7 @@ public class Repository<T> : IRepository<T> where T : class
         return Context.Set<T>().Where(predicate);
     }
 
-    public T GetById(int id)
+    public T? GetById(int id)
     {
         return Context.Set<T>().Find(id);
     }

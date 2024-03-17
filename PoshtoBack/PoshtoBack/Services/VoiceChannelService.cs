@@ -12,10 +12,10 @@ public class VoiceChannelDto
 
 public class VoiceChannelService
 {
-    private Dictionary<int, VoiceChannelDto> _voiceChannels;
+    private readonly Dictionary<int, VoiceChannelDto> _voiceChannels = new();
     public async Task ConnectUserToChannelAsync(IHubContext<VoiceHub> hub, int channelId, int userId)
     {
-        foreach (var channel in _voiceChannels.Values.Where(channel => channel.ConnectedUserIds.Contains(userId)))
+        foreach (var channel in _voiceChannels.Values.Where(channel => channel.ConnectedUserIds.Contains(userId) && !(channel.Id == channelId && channel.ConnectedUserIds.Contains(userId))))
         {
             await hub.Clients.All.SendAsync("VoiceDisconnect", new VoiceChannelConnectDto
             {
@@ -54,14 +54,26 @@ public class VoiceChannelService
 
     public IEnumerable<int> GetConnectedUsers(int channelId, IEnumerable<VoiceChannel> channels)
     {
-        _voiceChannels = channels.ToDictionary(
-            voiceChannel => voiceChannel.Id,
-            voiceChannel => new VoiceChannelDto
+        var updatedChannels = channels.ToDictionary(voiceChannel => voiceChannel.Id);
+
+        var channelsToRemove = _voiceChannels.Keys.Except(updatedChannels.Keys).ToList();
+        foreach (var channelIdToRemove in channelsToRemove)
+        {
+            _voiceChannels.Remove(channelIdToRemove);
+        }
+
+        foreach (var updatedChannel in updatedChannels)
+        {
+            if (!_voiceChannels.ContainsKey(updatedChannel.Key))
             {
-                Id = voiceChannel.Id,
-                ConnectedUserIds = []
-            });
-        
+                _voiceChannels.Add(updatedChannel.Key, new VoiceChannelDto
+                {
+                    Id = updatedChannel.Key,
+                    ConnectedUserIds = []
+                });
+            }
+        }
+
         return _voiceChannels.TryGetValue(channelId, out var channel) ? channel.ConnectedUserIds : Enumerable.Empty<int>();
     }
 }

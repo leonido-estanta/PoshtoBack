@@ -26,4 +26,13 @@ public class UserController(PoshtoDbContext context) : Controller
 
         return Ok(users);
     }
+
+    [HttpGet]
+    [Route("Get/{userId:int}")]
+    [Authorize]
+    public async Task<IActionResult> GetUser(int userId)
+    {
+        var user = _unitOfWork.Users.GetById(userId).Adapt<UserDto>();
+        return Ok(user);
+    }
 }

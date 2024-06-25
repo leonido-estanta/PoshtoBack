@@ -9,12 +9,12 @@ public class UnitOfWork : IUnitOfWork
         _context = context;
         Users = new UserRepository(_context);
         Messages = new MessageRepository(_context);
-        VoiceChannels = new VoiceChannelRepository(_context);
+        VoiceRooms = new VoiceRoomRepository(_context);
     }
 
     public IUserRepository Users { get; private set; }
     public IMessageRepository Messages { get; private set; }
-    public IVoiceChannelRepository VoiceChannels { get; private set; }
+    public IVoiceRoomRepository VoiceRooms { get; private set; }
 
     public int Save()
     {

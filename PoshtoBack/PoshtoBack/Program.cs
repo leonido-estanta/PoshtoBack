@@ -13,7 +13,7 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<SeedService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddSingleton<VoiceChannelService>();
+builder.Services.AddSingleton<VoiceRoomService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -26,6 +26,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false
         };
     });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SpecificOrigins", 
+        builder => builder.WithOrigins("http://localhost:1420")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -64,6 +74,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("SpecificOrigins");
 
 app.UseHttpsRedirection();
 app.UseRouting();

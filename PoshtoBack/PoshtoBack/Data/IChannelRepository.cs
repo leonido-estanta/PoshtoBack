@@ -2,7 +2,7 @@
 
 namespace PoshtoBack.Data;
 
-public interface IVoiceChannelRepository : IRepository<VoiceChannel>
+public interface IVoiceRoomRepository : IRepository<VoiceRoom>
 {
     
 }

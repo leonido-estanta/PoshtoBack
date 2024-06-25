@@ -7,7 +7,7 @@ public class PoshtoDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Message> Messages { get; set; }
-    public DbSet<VoiceChannel> VoiceChannels { get; set; }
+    public DbSet<VoiceRoom> VoiceRooms { get; set; }
 
     public PoshtoDbContext(DbContextOptions<PoshtoDbContext> options) : base(options)
     {
@@ -17,6 +17,6 @@ public class PoshtoDbContext : DbContext
     {
         modelBuilder.Entity<User>().ToTable("Users");
         modelBuilder.Entity<Message>().ToTable("Messages");
-        modelBuilder.Entity<VoiceChannel>().ToTable("VoiceChannels");
+        modelBuilder.Entity<VoiceRoom>().ToTable("VoiceRooms");
     }
 }

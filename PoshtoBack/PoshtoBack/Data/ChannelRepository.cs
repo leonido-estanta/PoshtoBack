@@ -2,9 +2,9 @@
 
 namespace PoshtoBack.Data;
 
-public class VoiceChannelRepository : Repository<VoiceChannel>, IVoiceChannelRepository
+public class VoiceRoomRepository : Repository<VoiceRoom>, IVoiceRoomRepository
 {
-    public VoiceChannelRepository(PoshtoDbContext context) : base(context)
+    public VoiceRoomRepository(PoshtoDbContext context) : base(context)
     {
     }
 }

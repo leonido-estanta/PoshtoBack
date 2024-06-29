@@ -28,5 +28,5 @@ public class UserInternal
     public string ConnectionId { get; set; }
     
     [JsonIgnore]
-    public VoiceRoomInternal CurrentVoiceRoom { get; set; }
+    public VoiceRoomInternal? CurrentVoiceRoom { get; set; }
 }

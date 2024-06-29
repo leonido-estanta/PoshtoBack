@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PoshtoBack.Containers;
 using PoshtoBack.Data;
 using PoshtoBack.Services;
 using PoshtoBack.Data.Models;
@@ -41,6 +42,8 @@ public class AuthController(PoshtoDbContext context) : Controller
 
         newUser.Name = $"user{newUser.Id}";
         _unitOfWork.Save();
+        
+        VoiceRoomContainer.DbUsers.Add(newUser);
 
         return Ok();
     }

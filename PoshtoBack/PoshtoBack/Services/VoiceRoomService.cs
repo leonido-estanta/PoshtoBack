@@ -9,8 +9,8 @@ public class VoiceRoomService
 {
     private readonly IUnitOfWork _unitOfWork;
 
-    private List<VoiceRoom> DbVoiceRooms { get; set; } = [];
-    private List<VoiceRoomInternal> InternalVoiceRooms { get; set; }
+    private List<VoiceRoom> DbVoiceRooms { get; set; } = new();
+    public List<VoiceRoomInternal> InternalVoiceRooms { get; set; } = new();
 
     public VoiceRoomService(IUnitOfWork unitOfWork)
     {
@@ -29,9 +29,9 @@ public class VoiceRoomService
             {
                 Id = voiceRoom.Id,
                 VoiceRoom = voiceRoom,
-                InternalUsers = []
+                ConnectedUsers = new List<UserInternal>()
             };
-            
+
             InternalVoiceRooms.Add(internalRoom);
         }
     }
@@ -39,7 +39,7 @@ public class VoiceRoomService
     public VoiceRoomInternal AddUserToRoom(UserInternal internalUser, string roomId)
     {
         var internalVoiceRoom = InternalVoiceRooms.FirstOrDefault(w => w.Id.ToString() == roomId);
-        internalVoiceRoom?.InternalUsers.Add(internalUser);
+        internalVoiceRoom?.ConnectedUsers.Add(internalUser);
         internalUser.CurrentVoiceRoom = internalVoiceRoom;
 
         return internalVoiceRoom;

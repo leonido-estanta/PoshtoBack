@@ -8,12 +8,14 @@ using PoshtoBack.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add this line
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<SeedService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddSingleton<VoiceRoomService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -29,7 +31,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("SpecificOrigins", 
+    options.AddPolicy("SpecificOrigins",
         builder => builder.WithOrigins("http://localhost:1420")
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -65,7 +67,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddDbContext<PoshtoDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("PoshtoConnectionString")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PoshtoConnectionString")));
 
 var app = builder.Build();
 

@@ -19,5 +19,5 @@ public class VoiceRoomInternal
 {
     public int Id { get; set; }
     public VoiceRoom VoiceRoom { get; set; }
-    public List<UserInternal> InternalUsers { get; set; }
+    public List<UserInternal> ConnectedUsers { get; set; }
 }

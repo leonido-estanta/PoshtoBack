@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using PoshtoBack.Containers;
 using PoshtoBack.Data;
 using PoshtoBack.Data.Models;
 using PoshtoBack.Helpers;
@@ -8,16 +9,18 @@ namespace PoshtoBack.Hubs;
 
 public class VoiceHub : Hub
 {
-    private readonly VoiceRoomService _voiceRoomService;
-    private readonly UserService _userService;
-
     public VoiceHub(PoshtoDbContext context)
     {
         IUnitOfWork unitOfWork = new UnitOfWork(context);
-        _voiceRoomService = new VoiceRoomService(unitOfWork);
-        _userService = new UserService(unitOfWork, this);
+        if (!VoiceRoomContainer.Loaded)
+        {
+            VoiceRoomContainer.VoiceRoomService = new VoiceRoomService(unitOfWork);
+            VoiceRoomContainer.UserService = new UserService(unitOfWork);
+
+            VoiceRoomContainer.Loaded = true;
+        }
     }
-    
+
     public string GetConnectionId()
     {
         return Context.ConnectionId;
@@ -25,8 +28,8 @@ public class VoiceHub : Hub
 
     public RtcIceServer[] GetIceServers()
     {
-        return
-        [
+        return new[]
+        {
             new RtcIceServer
             {
                 Urls = "stun:stun.l.google.com:19302"
@@ -37,30 +40,48 @@ public class VoiceHub : Hub
                 Username = "your-username",
                 Credential = "your-credential"
             }
-        ];
+        };
     }
 
     public async Task JoinVoiceRoom(string userId, string voiceRoomId)
     {
-        var user = _userService.AddInternalUser(userId, Context.ConnectionId);
-        await _userService.DisconnectInternalUser(user);
-        var room = _voiceRoomService.AddUserToRoom(user, voiceRoomId);
-        
+        var user = VoiceRoomContainer.UserService.AddInternalUser(userId, Context.ConnectionId);
+        await VoiceRoomContainer.UserService.DisconnectInternalUser(user, Clients.All);
+        var room = VoiceRoomContainer.VoiceRoomService.AddUserToRoom(user, voiceRoomId);
+
         await Groups.AddToGroupAsync(Context.ConnectionId, voiceRoomId);
 
         await room.SendUserListUpdate(Clients.Caller, true);
         await room.SendUserListUpdate(Clients.Others, false);
     }
-    
+
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        await Disconnect();
+        await Leave(Clients.All);
 
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task Disconnect()
+    public async Task Leave(IClientProxy allClients)
     {
-        await _userService.RemoveInternalUser(Context.ConnectionId);
+        await VoiceRoomContainer.UserService.RemoveInternalUser(Context.ConnectionId, allClients);
+    }
+
+    public async Task SendSignal(string signal, string targetConnectionId)
+    {
+        var callingUser = VoiceRoomContainer.UserService.GetInternalUserByConnection(Context.ConnectionId);
+        var targetUser = VoiceRoomContainer.UserService.GetInternalUserByConnection(targetConnectionId);
+
+        if (callingUser == null || targetUser == null)
+        {
+            return;
+        }
+
+        await Clients.Client(targetConnectionId).SendAsync("receiveSignal", callingUser, signal);
+    }
+
+    public async Task SendRoomsData(bool self)
+    {
+        await VoiceRoomContainer.VoiceRoomService.InternalVoiceRooms.SendRoomListUpdate(self ? Clients.Caller : Clients.All);
     }
 }

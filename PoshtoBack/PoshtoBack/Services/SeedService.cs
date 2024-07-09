@@ -18,7 +18,7 @@ public class SeedService
         return string.Join(" ", randomWords);
     }
 
-    public static string EncodeSeed(string seed)
+    public static string EncodeString(string seed)
     {
         var data = Encoding.UTF8.GetBytes(seed);
         var hashData = SHA256.HashData(data);

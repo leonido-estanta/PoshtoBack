@@ -9,15 +9,15 @@ public class VoiceRoom
     public string Name { get; set; }
 }
 
-public class VoiceRoomConnectDto
+public class VoiceRoomDto
 {
-    public string UserId { get; set; }
-    public string RoomId { get; set; }
+    public int Id { get; set; }
+    public string Name { get; set; }
 }
 
 public class VoiceRoomInternal
 {
     public int Id { get; set; }
-    public VoiceRoom VoiceRoom { get; set; }
+    public VoiceRoomDto VoiceRoom { get; set; }
     public List<UserInternal> ConnectedUsers { get; set; }
 }

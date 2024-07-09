@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Mapster;
+using Microsoft.AspNetCore.SignalR;
 using PoshtoBack.Containers;
 using PoshtoBack.Data;
 using PoshtoBack.Data.Models;
 using PoshtoBack.Helpers;
-using PoshtoBack.Hubs;
 
 namespace PoshtoBack.Services;
 
@@ -20,18 +20,29 @@ public class UserService
 
     private void InitializeUsersFromDatabase()
     {
-        VoiceRoomContainer.DbUsers = _unitOfWork.Users.GetAll().ToList();
+        GlobalContainer.DbUsers = _unitOfWork.Users.GetAll().ToList();
+
+        InitializeServerUsersFromDatabase();
+    }
+    
+    private void InitializeServerUsersFromDatabase()
+    {
+        foreach (var user in GlobalContainer.DbUsers)
+        {
+            var userDto = user.Adapt<ServerUserDto>();
+            GlobalContainer.ServerUsers.Add(userDto);
+        }
     }
 
     public UserInternal AddInternalUser(string userId, string connectionId)
     {
-        var existingUser = VoiceRoomContainer.InternalUsers.SingleOrDefault(user => user.Id.ToString() == userId);
+        var existingUser = GlobalContainer.InternalUsers.SingleOrDefault(user => user.Id.ToString() == userId);
         if (existingUser != null)
         {
             return existingUser;
         }
         
-        var dbUser = VoiceRoomContainer.DbUsers.SingleOrDefault(user => user.Id.ToString() == userId);
+        var dbUser = GlobalContainer.DbUsers.SingleOrDefault(user => user.Id.ToString() == userId);
         if (dbUser == null)
         {
             throw new Exception("User not found");
@@ -40,17 +51,17 @@ public class UserService
         var newInternalUser = new UserInternal
         {
             Id = dbUser.Id,
-            User = dbUser,
+            User = dbUser.Adapt<UserDto>(),
             ConnectionId = connectionId
         };
-        VoiceRoomContainer.InternalUsers.Add(newInternalUser);
+        GlobalContainer.InternalUsers.Add(newInternalUser);
             
         return newInternalUser;
     }
 
     public async Task RemoveInternalUser(string connectionId, IClientProxy allClients)
     {
-        var internalUserToRemove = VoiceRoomContainer.InternalUsers.SingleOrDefault(user => user.ConnectionId == connectionId);
+        var internalUserToRemove = GlobalContainer.InternalUsers.SingleOrDefault(user => user.ConnectionId == connectionId);
         if (internalUserToRemove == null)
         {
             return;
@@ -58,7 +69,7 @@ public class UserService
 
         await DisconnectInternalUser(internalUserToRemove, allClients);
 
-        VoiceRoomContainer.InternalUsers.Remove(internalUserToRemove);
+        GlobalContainer.InternalUsers.Remove(internalUserToRemove);
     }
 
     public async Task DisconnectInternalUser(UserInternal userInternal, IClientProxy allClients)
@@ -70,10 +81,17 @@ public class UserService
             await room.SendUserListUpdate(allClients, false);
         }
     }
+    
+    public async Task EnterServer(string userId, string connectionId)
+    {
+        var existingUser = GlobalContainer.ServerUsers.SingleOrDefault(user => user.Id.ToString() == userId);
+        existingUser.OnlineStatus = OnlineStatus.Online;
+        existingUser.ConnectionId = connectionId;
+    }
 
     public UserInternal? GetInternalUserByConnection(string connectionId)
     {
-        var user = VoiceRoomContainer.InternalUsers.SingleOrDefault(user => user.ConnectionId == connectionId);
+        var user = GlobalContainer.InternalUsers.SingleOrDefault(user => user.ConnectionId == connectionId);
         return user;
     }
 }

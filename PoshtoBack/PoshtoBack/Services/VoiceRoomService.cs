@@ -1,44 +1,37 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Mapster;
+using PoshtoBack.Containers;
 using PoshtoBack.Data;
 using PoshtoBack.Data.Models;
-using PoshtoBack.Hubs;
 
 namespace PoshtoBack.Services;
 
 public class VoiceRoomService
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    private List<VoiceRoom> DbVoiceRooms { get; set; } = new();
-    public List<VoiceRoomInternal> InternalVoiceRooms { get; set; } = new();
-
     public VoiceRoomService(IUnitOfWork unitOfWork)
     {
-        _unitOfWork = unitOfWork;
+        GlobalContainer.DbVoiceRooms = unitOfWork.VoiceRooms.GetAll().ToList();
 
         InitializeRoomsFromDatabase();
     }
 
     private void InitializeRoomsFromDatabase()
     {
-        DbVoiceRooms = _unitOfWork.VoiceRooms.GetAll().ToList();
-
-        foreach (var voiceRoom in DbVoiceRooms)
+        foreach (var voiceRoom in GlobalContainer.DbVoiceRooms)
         {
             var internalRoom = new VoiceRoomInternal
             {
                 Id = voiceRoom.Id,
-                VoiceRoom = voiceRoom,
-                ConnectedUsers = new List<UserInternal>()
+                VoiceRoom = voiceRoom.Adapt<VoiceRoomDto>(),
+                ConnectedUsers = []
             };
 
-            InternalVoiceRooms.Add(internalRoom);
+            GlobalContainer.InternalVoiceRooms.Add(internalRoom);
         }
     }
 
     public VoiceRoomInternal AddUserToRoom(UserInternal internalUser, string roomId)
     {
-        var internalVoiceRoom = InternalVoiceRooms.FirstOrDefault(w => w.Id.ToString() == roomId);
+        var internalVoiceRoom = GlobalContainer.InternalVoiceRooms.FirstOrDefault(w => w.Id.ToString() == roomId);
         internalVoiceRoom?.ConnectedUsers.Add(internalUser);
         internalUser.CurrentVoiceRoom = internalVoiceRoom;
 

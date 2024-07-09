@@ -15,11 +15,13 @@ public class AuthController(PoshtoDbContext context) : Controller
 
     [HttpPost]
     [Route("Login")]
-    public async Task<IActionResult> Login(string seedPhrase)
+    public async Task<IActionResult> Login(LoginModel model)
     {
-        var encodedSeed = SeedService.EncodeSeed(seedPhrase);
-        var user = _unitOfWork.Users.Find(w => w.PasswordHash == encodedSeed).FirstOrDefault();
+        var user = _unitOfWork.Users.Find(w => w.Email == model.Email).FirstOrDefault();
         if (user == null) return NotFound();
+        
+        var encodedPassword = SeedService.EncodeString(model.Password);
+        if (user.PasswordHash != encodedPassword) return NotFound(); 
         
         var token = _jwtService.GenerateToken(user);
         return Ok(new { user, token });
@@ -27,24 +29,26 @@ public class AuthController(PoshtoDbContext context) : Controller
 
     [HttpPost]
     [Route("Register")]
-    public async Task<IActionResult> Register(string seedPhrase)
+    public async Task<IActionResult> Register(LoginModel model)
     {
-        var encodedSeed = SeedService.EncodeSeed(seedPhrase);
+        var encodedPassword = SeedService.EncodeString(model.Password);
 
-        var newUser = new User
+        var user = new User
         {
-            PasswordHash = encodedSeed,
+            Email = model.Email,
+            PasswordHash = encodedPassword,
             AvatarUrl = "https://i.pinimg.com/736x/0d/64/98/0d64989794b1a4c9d89bff571d3d5842.jpg"
         };
 
-        _unitOfWork.Users.Add(newUser);
+        _unitOfWork.Users.Add(user);
         _unitOfWork.Save();
 
-        newUser.Name = $"user{newUser.Id}";
+        user.Name = $"user{user.Id}";
         _unitOfWork.Save();
         
-        VoiceRoomContainer.DbUsers.Add(newUser);
+        GlobalContainer.DbUsers.Add(user);
 
-        return Ok();
+        var token = _jwtService.GenerateToken(user);
+        return Ok(new { user, token });
     }
 }

@@ -40,7 +40,7 @@ public class ChatController(PoshtoDbContext context, IHubContext<ChatHub> chatHu
         var message = new Message
         {
             SenderId = Convert.ToInt32(userId),
-            Timestamp = DateTime.Now,
+            Timestamp = DateTime.UtcNow,
             Text = model.Text
         };
 

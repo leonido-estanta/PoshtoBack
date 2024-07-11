@@ -82,7 +82,7 @@ public class UserService
         }
     }
     
-    public async Task EnterServer(string userId, string connectionId)
+    public async Task EnterServerAsync(string userId, string connectionId)
     {
         var existingUser = GlobalContainer.ServerUsers.SingleOrDefault(user => user.Id.ToString() == userId);
         existingUser.OnlineStatus = OnlineStatus.Online;

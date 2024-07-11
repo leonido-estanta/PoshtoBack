@@ -17,7 +17,7 @@ public class UserHub : Hub
 
     public async Task EnterServer(string userId)
     {
-        await GlobalContainer.UserService.EnterServer(userId, Context.ConnectionId);
+        await GlobalContainer.UserService.EnterServerAsync(userId, Context.ConnectionId);
 
         await Clients.All.SendAsync("updateServerUsers", GlobalContainer.ServerUsers);
     }

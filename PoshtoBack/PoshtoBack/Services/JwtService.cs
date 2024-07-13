@@ -9,6 +9,7 @@ namespace PoshtoBack.Services;
 public interface IJwtService
 {
     string GenerateToken(User user);
+    ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
 }
 
 public class JwtService : IJwtService
@@ -32,5 +33,27 @@ public class JwtService : IJwtService
         };
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
+    }
+    
+    public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(SecretKey);
+        var tokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = false
+        };
+
+        var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
+        if (securityToken is JwtSecurityToken jwtSecurityToken && jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return principal;
+        }
+
+        throw new SecurityTokenException("Invalid token");
     }
 }

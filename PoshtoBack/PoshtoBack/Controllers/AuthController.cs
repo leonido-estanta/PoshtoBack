@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using PoshtoBack.Containers;
 using PoshtoBack.Data;
 using PoshtoBack.Services;
@@ -50,5 +51,18 @@ public class AuthController(PoshtoDbContext context) : Controller
 
         var token = _jwtService.GenerateToken(user);
         return Ok(new { user, token });
+    }
+    
+    [HttpPost]
+    [Route("RenewToken")]
+    public async Task<IActionResult> RenewToken(TokenRenewalModel model)
+    {
+        var principal = _jwtService.GetPrincipalFromExpiredToken(model.Token);
+        var userId = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        var user = _unitOfWork.Users.Find(w => w.Id.ToString() == userId).FirstOrDefault();
+        if (user == null) return NotFound();
+
+        var newToken = _jwtService.GenerateToken(user);
+        return Ok(new { token = newToken });
     }
 }

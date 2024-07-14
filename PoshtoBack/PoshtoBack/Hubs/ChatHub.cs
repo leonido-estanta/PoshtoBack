@@ -1,17 +1,35 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Mapster;
+using Microsoft.AspNetCore.SignalR;
 using PoshtoBack.Data.Models;
-using Mapster;
 using Microsoft.AspNetCore.Authorization;
+using PoshtoBack.Containers;
+using PoshtoBack.Data;
 
 namespace PoshtoBack.Hubs;
 
 [Authorize]
 public class ChatHub : Hub
 {
-    public async Task ResendMessage(Message message)
+    private IUnitOfWork _unitOfWork;
+    public ChatHub(PoshtoDbContext context)
     {
-        var messageDto = message.Adapt<MessageDto>();
+        _unitOfWork = new UnitOfWork(context);
+        GlobalContainer.Initialize(_unitOfWork);
+    }
+    
+    public async Task AddMessage(string userId, string text) // TODO: remove userId sending
+    {
+        var newMessage = new Message()
+        {
+            SenderId = Convert.ToInt32(userId),
+            Timestamp = DateTime.UtcNow,
+            Text = text
+        };
+        _unitOfWork.Messages.Add(newMessage);
+        _unitOfWork.Save();
 
-        await Clients.All.SendAsync("ReceiveMessage", messageDto);
+        var message = newMessage.Adapt<MessageDto>();
+        
+        await Clients.All.SendAsync("ReceiveMessage", message);
     }
 }

@@ -29,26 +29,4 @@ public class ChatController(PoshtoDbContext context, IHubContext<ChatHub> chatHu
         
         return Ok(messages);
     }
-
-    [HttpPost]
-    [Route("Add")]
-    [Authorize]
-    public async Task<IActionResult> AddMessage(AddMessageDto model)
-    {
-        var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-        var message = new Message
-        {
-            SenderId = Convert.ToInt32(userId),
-            Timestamp = DateTime.UtcNow,
-            Text = model.Text
-        };
-
-        _unitOfWork.Messages.Add(message);
-        _unitOfWork.Save();
-
-        var modelDto = message.Adapt<MessageDto>();
-        await chatHubContext.Clients.All.SendAsync("ReceiveMessage", modelDto);
-        return Ok(modelDto);
-    }
 }

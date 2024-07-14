@@ -15,7 +15,7 @@ public interface IJwtService
 public class JwtService : IJwtService
 {
     private const string SecretKey = "b6e9c882-4278-4eb5-8753-c0e8e64de461";
-    private const double ExpiryDurationMinutes = 30;
+    private const double ExpiryDurationDays = 30;
 
     public string GenerateToken(User user)
     {
@@ -28,7 +28,7 @@ public class JwtService : IJwtService
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, !string.IsNullOrEmpty(user.Name) ? user.Name : string.Empty )
             }),
-            Expires = DateTime.UtcNow.AddMinutes(ExpiryDurationMinutes),
+            Expires = DateTime.UtcNow.AddDays(ExpiryDurationDays),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
         var token = tokenHandler.CreateToken(tokenDescriptor);

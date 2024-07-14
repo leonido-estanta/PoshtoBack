@@ -25,8 +25,8 @@ public class UserHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var singleOrDefault = GlobalContainer.ServerUsers.SingleOrDefault(w => w.ConnectionId == Context.ConnectionId);
-        singleOrDefault.OnlineStatus = OnlineStatus.Offline;
-        
+        if (singleOrDefault != null) singleOrDefault.OnlineStatus = OnlineStatus.Offline;
+
         await Clients.All.SendAsync("updateServerUsers", GlobalContainer.ServerUsers);
 
         await base.OnDisconnectedAsync(exception);

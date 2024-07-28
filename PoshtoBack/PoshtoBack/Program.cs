@@ -52,8 +52,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("SpecificOrigins",
-        corsPolicyBuilder => corsPolicyBuilder.WithOrigins("http://localhost:1420")
+    options.AddPolicy("AllowNgrok",
+        corsPolicyBuilder => corsPolicyBuilder
+            .SetIsOriginAllowed(origin => new Uri(origin).Host.EndsWith("ngrok-free.app"))
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
@@ -98,10 +99,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("SpecificOrigins");
-
-app.UseHttpsRedirection();
 app.UseRouting();
+// app.UseHttpsRedirection(); // Comment this line out if testing without HTTPS
+app.UseCors("AllowNgrok");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
